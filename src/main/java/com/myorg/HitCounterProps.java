@@ -12,12 +12,20 @@ public interface HitCounterProps {
     // The function for which we want to count url hits
     IFunction getDownstream();
 
+    Number getReadCapacity();
+
     // The builder for the props interface
     class Builder {
         private IFunction downstream;
+        private Number readCapacity;
 
         public Builder downstream(final IFunction function) {
             this.downstream = function;
+            return this;
+        }
+
+        public Builder readCapacity(final Number readCapacity) {
+            this.readCapacity = readCapacity;
             return this;
         }
 
@@ -26,7 +34,17 @@ public interface HitCounterProps {
                 throw new NullPointerException("The downstream property is required!");
             }
 
-            return () -> downstream;
+            return new HitCounterProps() {
+                @Override
+                public IFunction getDownstream() {
+                    return downstream;
+                }
+
+                @Override
+                public Number getReadCapacity() {
+                    return readCapacity;
+                }
+            };
         }
     }
 }

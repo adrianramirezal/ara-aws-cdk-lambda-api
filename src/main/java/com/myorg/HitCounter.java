@@ -4,6 +4,7 @@ import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.services.dynamodb.Attribute;
 import software.amazon.awscdk.services.dynamodb.AttributeType;
 import software.amazon.awscdk.services.dynamodb.Table;
+import software.amazon.awscdk.services.dynamodb.TableEncryption;
 import software.amazon.awscdk.services.lambda.Code;
 import software.amazon.awscdk.services.lambda.Function;
 import software.amazon.awscdk.services.lambda.Runtime;
@@ -19,12 +20,22 @@ public class HitCounter extends Construct {
     public HitCounter(final Construct scope, final String id, final HitCounterProps props) {
         super(scope, id);
 
+        if (props.getReadCapacity() != null) {
+            if (props.getReadCapacity().intValue() < 5 || props.getReadCapacity().intValue() > 20) {
+                throw new RuntimeException("readCapacity must be greater than 5 or less than 20");
+            }
+        }
+
+        Number readCapacity = (props.getReadCapacity() == null) ? 5 : props.getReadCapacity();
+
         this.table = Table.Builder.create(this, "Hits")
                 .partitionKey(Attribute.builder()
                         .name("path")
                         .type(AttributeType.STRING)
                         .build())
                 .removalPolicy(RemovalPolicy.DESTROY)
+                .encryption(TableEncryption.AWS_MANAGED)
+                .readCapacity(readCapacity)
                 .build();
 
         final Map<String, String> environment = new HashMap<>();
